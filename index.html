@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RTA Cricket Live</title>
+<style>
+body { background:#111; color:white; text-align:center; font-family:sans-serif; }
+.scorebox { background:#222; padding:20px; margin:20px; border-radius:10px; }
+button { padding:10px; margin:5px; font-size:18px; }
+</style>
+</head>
+<body>
+
+<h1>RTA Cricket Live</h1>
+
+<div class="scorebox">
+<h2 id="team">Team A</h2>
+<h1 id="score">0/0</h1>
+<h3 id="over">0.0 Over</h3>
+</div>
+
+<button onclick="addRun(1)">+1</button>
+<button onclick="addRun(4)">+4</button>
+<button onclick="addRun(6)">+6</button>
+<button onclick="wicket()">Wicket</button>
+
+<script>
+let runs = 0;
+let wickets = 0;
+let balls = 0;
+
+function addRun(r){
+runs += r;
+balls++;
+update();
+}
+
+function wicket(){
+wickets++;
+balls++;
+update();
+}
+
+function update(){
+document.getElementById("score").innerText = runs + "/" + wickets;
+document.getElementById("over").innerText = 
+Math.floor(balls/6) + "." + (balls%6) + " Over";
+}
+</script>
+
+</body>
+</html>
