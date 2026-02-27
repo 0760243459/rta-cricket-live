@@ -4,47 +4,105 @@
 <title>RTA Cricket Live</title>
 <style>
 body { background:#111; color:white; text-align:center; font-family:sans-serif; }
-.scorebox { background:#222; padding:20px; margin:20px; border-radius:10px; }
+.box { background:#222; padding:20px; margin:20px; border-radius:10px; }
 button { padding:10px; margin:5px; font-size:18px; }
+input { padding:8px; margin:5px; }
 </style>
 </head>
 <body>
 
 <h1>RTA Cricket Live</h1>
 
-<div class="scorebox">
+<div class="box">
+<input id="teamInput" placeholder="Team Name">
+<button onclick="changeTeam()">Set Team</button>
 <h2 id="team">Team A</h2>
+
 <h1 id="score">0/0</h1>
-<h3 id="over">0.0 Over</h3>
+<h3>Over: <span id="over">0.0</span></h3>
+<h3>Run Rate: <span id="rr">0.00</span></h3>
+<h3>Last 6 Balls: <span id="last6">-</span></h3>
 </div>
 
 <button onclick="addRun(1)">+1</button>
+<button onclick="addRun(2)">+2</button>
 <button onclick="addRun(4)">+4</button>
 <button onclick="addRun(6)">+6</button>
 <button onclick="wicket()">Wicket</button>
 
-<script>
-let runs = 0;
-let wickets = 0;
-let balls = 0;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-function addRun(r){
-runs += r;
-balls++;
-update();
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDUw5U7leMHbdjYQ5q7lWq2BF0uoc4eJxs",
+  authDomain: "rta-cricket-live.firebaseapp.com",
+  databaseURL: "https://rta-cricket-live-default-rtdb.firebaseio.com",
+  projectId: "rta-cricket-live",
+  storageBucket: "rta-cricket-live.firebasestorage.app",
+  messagingSenderId: "637868331669",
+  appId: "1:637868331669:web:d8308bbc7a1701e445419c"
+};
+
+
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const scoreRef = ref(db, "match");
+
+let data = {
+  team: "Team A",
+  runs: 0,
+  wickets: 0,
+  balls: 0,
+  last6: []
+};
+
+function updateFirebase() {
+  set(scoreRef, data);
 }
 
-function wicket(){
-wickets++;
-balls++;
-update();
+window.addRun = function(r){
+  data.runs += r;
+  data.balls++;
+  updateLast6(r);
+  updateFirebase();
 }
 
-function update(){
-document.getElementById("score").innerText = runs + "/" + wickets;
-document.getElementById("over").innerText = 
-Math.floor(balls/6) + "." + (balls%6) + " Over";
+window.wicket = function(){
+  data.wickets++;
+  data.balls++;
+  updateLast6("W");
+  updateFirebase();
 }
+
+window.changeTeam = function(){
+  data.team = document.getElementById("teamInput").value;
+  updateFirebase();
+}
+
+function updateLast6(val){
+  data.last6.push(val);
+  if(data.last6.length > 6){
+    data.last6.shift();
+  }
+}
+
+onValue(scoreRef, (snapshot)=>{
+  if(snapshot.exists()){
+    data = snapshot.val();
+    document.getElementById("team").innerText = data.team;
+    document.getElementById("score").innerText = data.runs + "/" + data.wickets;
+    document.getElementById("over").innerText =
+      Math.floor(data.balls/6) + "." + (data.balls%6);
+    document.getElementById("rr").innerText =
+      (data.runs / (data.balls/6 || 1)).toFixed(2);
+    document.getElementById("last6").innerText =
+      data.last6.join(" ");
+  }
+});
 </script>
 
 </body>
